@@ -18,6 +18,23 @@ export const listProducts = async (req, res, next) => {
   }
 };
 
-// Se tiver update/delete, mantenha o padrão:
-// export const updateProduct = async...
-// export const deleteProduct = async...
+// ADICIONA ESSAS 2 - MESMO PADRÃO DO SEU
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const product = await ProductService.update(id, req.body, req.user.id);
+    return res.json(product);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await ProductService.remove(id, req.user.id);
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+};

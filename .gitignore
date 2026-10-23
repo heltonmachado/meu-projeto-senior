@@ -1,6 +1,7 @@
-[STRIPPED 67 bytes]
+node_modules/
 .env
 .env.local
-backend/.env
-frontend/.env
+dist/
+build/
 .DS_Store
+
