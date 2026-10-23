@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_senior
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: crud_senior
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crud_senior -q"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_senior
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: api_senior
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres123@db:5432/crud_senior"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "SEU_SEGREDO_64_CHARS_1234567890_ABCDEF_SUPER_SEGURO"
+      JWT_REFRESH_SECRET: "OUTRO_SEGREDO_64_CHARS_0987654321_FEDCBA_SUPER_SEGURO"
+      PORT: 5000
+      CORS_ORIGIN: "http://localhost:3000,http://localhost:5173"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: web_senior
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3000:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: postgres_senior_data
+  redis_data:
+    name: redis_senior_data
