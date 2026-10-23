@@ -1,0 +1,42 @@
+# dependencias
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# build
+dist/
+build/
+frontend/dist/
+.vite/
+
+# env
+.env
+.env.local
+.env.production
+*.log
+
+# SO
+.DS_Store
+Thumbs.db
+EOF~cd ~/Downloads/meu-projeto-senior
+cat > .gitignore << 'EOF'
+# dependencias
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# build
+dist/
+build/
+frontend/dist/
+.vite/
+
+# env
+.env
+.env.local
+.env.production
+*.log
+
+# SO
+.DS_Store
+Thumbs.db
