@@ -1,7 +1,30 @@
+# dependencies
 node_modules/
-.env
-.env.local
 dist/
 build/
-.DS_Store
+.pnp/
+.pnp.js
 
+# env e segredos - NUNCA commitar
+.env
+.env.*
+!.env.example
+cookies.txt
+*.pem
+*.key
+
+# logs
+logs
+*.log
+npm-debug.log*
+pids
+*.pid
+
+# OS e IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# temporários
+status-projeto.txt
