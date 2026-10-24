@@ -10,3 +10,9 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .login-card{padding:32px;background:#fff;border-radius:16px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,0.08)}
 .login-card h2{margin-bottom:8px;font-size:22px}
 .error-box{background:#fee2e2;color:#b91c1c;padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid #fecaca}
+
+/* campo senha com olho - NOVO */
+.password-field{position:relative;display:flex;align-items:center;width:100%}
+.password-field input{width:100%;padding-right:40px}
+.password-toggle{position:absolute;right:10px;background:none;border:0;cursor:pointer;font-size:18px;color:#666;padding:4px;line-height:1}
+.password-toggle:hover{color:#111}
