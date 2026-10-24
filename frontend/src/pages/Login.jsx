@@ -3,63 +3,94 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import api from '../api/api.js';
 
-// PÁGINA DE LOGIN/REGISTRO - Staff Level
-// Fluxo: register -> login -> /products
-// Usa AuthContext para salvar token e user no localStorage + cookie httpOnly (refresh)
 export default function Login() {
-  const [email, setEmail] = useState('teste@teste.com');
-  const [password, setPassword] = useState('123456');
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [isRegister, setIsRegister] = useState(false);
-  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handle = async (e) => {
+  const updateField = (field) => (e) => {
+    setForm(prev => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    
+    // validacao na borda
+    if (isRegister && form.name.trim().length < 3) {
+      return setError('Nome deve ter no minimo 3 caracteres');
+    }
+    if (form.password.length < 6) {
+      return setError('Senha deve ter no minimo 6 caracteres');
+    }
+
+    setLoading(true);
     try {
       if (isRegister) {
-        // Validação Staff antes de enviar
-        if (name.length < 3) throw new Error('Nome mínimo 3 caracteres');
-        if (password.length < 6) throw new Error('Senha mínimo 6 caracteres');
-        
-        await api.post('/auth/register', { name, email, password });
-        alert('Cadastro OK! Agora faça login.');
+        await api.post('/auth/register', form);
         setIsRegister(false);
+        setError(''); // limpa e mostra sucesso no proprio form
+        // em vez de alert, mostra mensagem de sucesso no state
+        setForm(prev => ({ ...prev, password: '' }));
       } else {
-        // login vem do AuthContext: salva accessToken + user
-        await login(email, password);
-        navigate('/products');
+        await login(form.email, form.password);
+        navigate('/products', { replace: true });
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Erro';
-      setError(msg);
-      console.error('Login error:', err);
+      const message = err.response?.data?.message || err.message || 'Erro inesperado';
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#f5f5f5' }}>
-      <form onSubmit={handle} style={{ padding:30, background:'#fff', borderRadius:12, width:360, display:'flex', flexDirection:'column', gap:12, boxShadow:'0 4px 20px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ color:'#111', margin:0 }}>{isRegister ? 'Cadastro Senior' : 'Login Senior'}</h2>
+    <div className="login-wrapper">
+      <form onSubmit={handleSubmit} className="login-card">
+        <h2>{isRegister ? 'Criar conta' : 'Entrar'}</h2>
         
-        {error && <div style={{ background:'#fee', color:'#c00', padding:10, borderRadius:6, fontSize:13 }}>{error}</div>}
+        {error && <div className="error-box">{error}</div>}
         
-        {isRegister && <input value={name} onChange={e=>setName(e.target.value)} placeholder="Nome (min 3)" required style={{ padding:10, border:'1px solid #ccc', borderRadius:6 }} />}
-        <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" type="email" required style={{ padding:10, border:'1px solid #ccc', borderRadius:6 }} />
-        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (min 6)" required style={{ padding:10, border:'1px solid #ccc', borderRadius:6 }} />
+        {isRegister && (
+          <input 
+            value={form.name} 
+            onChange={updateField('name')} 
+            placeholder="Nome completo" 
+            autoComplete="name"
+            required 
+          />
+        )}
+        <input 
+          value={form.email} 
+          onChange={updateField('email')} 
+          placeholder="Email" 
+          type="email" 
+          autoComplete="email"
+          required 
+        />
+        <input 
+          type="password" 
+          value={form.password} 
+          onChange={updateField('password')} 
+          placeholder="Senha" 
+          autoComplete={isRegister ? 'new-password' : 'current-password'}
+          required 
+        />
         
-        <button type="submit" disabled={loading} style={{ padding:10, background: loading ? '#888' : '#111', color:'#fff', border:0, borderRadius:6, cursor:'pointer', opacity: loading ? 0.7 : 1 }}>
+        <button type="submit" disabled={loading}>
           {loading ? 'Carregando...' : (isRegister ? 'Cadastrar' : 'Entrar')}
         </button>
         
-        <button type="button" onClick={()=>{ setIsRegister(!isRegister); setError(''); }} style={{ padding:10, background:'#eee', color:'#111', border:0, borderRadius:6, cursor:'pointer' }}>
+        <button 
+          type="button" 
+          onClick={()=> setIsRegister(!isRegister)} 
+          disabled={loading}
+          className="secondary"
+        >
           {isRegister ? 'Já tenho conta' : 'Criar conta'}
         </button>
       </form>
