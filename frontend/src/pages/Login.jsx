@@ -1,5 +1,5 @@
 import { useState, useContext, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.jsx';
 import api from '../api/api.js';
 
@@ -84,6 +84,10 @@ export default function Login() {
         <button type="button" onClick={() => setMode(m => m === 'login' ? 'register' : 'login')} disabled={loading} className="secondary">
           {isRegister ? 'Já tenho conta' : 'Criar conta'}
         </button>
+
+        {!isRegister && (
+          <Link to="/forgot-password" className="forgot-link">Esqueci minha senha</Link>
+        )}
       </form>
     </div>
   );

@@ -8,6 +8,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT_SECRET;
 const ACCESS_EXPIRES = '15m';
 const REFRESH_EXPIRES = 7 * 24 * 60 * 60;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+const RESET_TOKEN_EXPIRES_MIN = 15;
 
 class AuthServiceClass {
   generateAccessToken(user) {
@@ -21,6 +23,9 @@ class AuthServiceClass {
   }
 
   async register({ name, email, password }) {
+    if (!PASSWORD_REGEX.test(password)) {
+      throw new Error('Senha fraca: mínimo 8 chars, maiúscula, minúscula, número e símbolo');
+    }
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) throw new Error('Email já cadastrado');
     const hashed = await bcrypt.hash(password, 10);
@@ -42,7 +47,6 @@ class AuthServiceClass {
       data: { tokenHash, userId: user.id, expiresAt: new Date(Date.now() + REFRESH_EXPIRES * 1000) }
     });
 
-    // FIX V3: 'EX' separado, não { EX: ... }
     await redis.set(`refresh:${jti}`, user.id.toString(), 'EX', REFRESH_EXPIRES);
 
     return { user: { id: user.id, name: user.name, email: user.email, role: user.role }, accessToken, refreshToken };
@@ -93,6 +97,61 @@ class AuthServiceClass {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, role: true, createdAt: true } });
     if (!user) throw new Error('Usuário não encontrado');
     return user;
+  }
+
+  // ===== NOVO: RECUPERAR SENHA =====
+  
+  async forgotPassword(email) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    // Nunca revela se email existe - segurança
+    if (!user) return { message: 'Se o email existir, enviaremos o link' };
+
+    // Invalida tokens antigos
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRES_MIN * 60 * 1000);
+
+    await prisma.passwordResetToken.create({
+      data: { token: tokenHash, userId: user.id, expiresAt }
+    });
+
+    // DEV: loga no console. PROD: integrar Resend/SES
+    const resetLink = `http://localhost:5173/reset-password?token=${rawToken}`;
+    console.log(`\n[FORGOT PASSWORD] Link para ${email}: ${resetLink}\n`);
+
+    // Em dev, retorna link pra facilitar teste. Em prod, não retornar.
+    if (process.env.NODE_ENV !== 'production') {
+      return { message: 'Link gerado', resetLink, rawToken };
+    }
+    return { message: 'Se o email existir, enviaremos o link' };
+  }
+
+  async resetPassword(rawToken, newPassword) {
+    if (!PASSWORD_REGEX.test(newPassword)) {
+      throw new Error('Senha fraca: mínimo 8 chars, maiúscula, minúscula, número e símbolo');
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const stored = await prisma.passwordResetToken.findUnique({ where: { token: tokenHash } });
+
+    if (!stored) throw new Error('Token inválido');
+    if (stored.expiresAt < new Date()) {
+      await prisma.passwordResetToken.delete({ where: { id: stored.id } });
+      throw new Error('Token expirado');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: stored.userId }, data: { password: hashed } });
+
+    // Invalida token após uso + revoga todos refresh tokens
+    await prisma.passwordResetToken.delete({ where: { id: stored.id } });
+    await prisma.refreshToken.updateMany({ where: { userId: stored.userId }, data: { revoked: true } });
+    
+    // Limpa Redis de refresh tokens desse user
+    // Opcional: varrer chaves refresh:* - em prod usa scan
+    return { message: 'Senha redefinida com sucesso' };
   }
 }
 

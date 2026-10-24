@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
+  id            Int                  @id @default(autoincrement())
   name          String
-  email         String         @unique
+  email         String               @unique
   password      String
-  role          String         @default("USER")
+  role          String               @default("USER")
   products      Product[]
   refreshTokens RefreshToken[]
-  createdAt     DateTime       @default(now())
+  resetTokens   PasswordResetToken[]
+  createdAt     DateTime             @default(now())
 }
 
 model Product {
@@ -39,6 +40,21 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   revoked   Boolean  @default(false)
   expiresAt DateTime
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model AuditLog {
@@ -47,4 +63,7 @@ model AuditLog {
   userId    Int
   metadata  String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
