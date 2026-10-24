@@ -5,14 +5,30 @@ button{background:#111;color:#fff;cursor:pointer;border:0;font-weight:600;transi
 button:hover{opacity:0.9}
 button:disabled{opacity:0.5;cursor:not-allowed}
 
-/* login especifico */
+/* login */
 .login-wrapper{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
 .login-card{padding:32px;background:#fff;border-radius:16px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,0.08)}
 .login-card h2{margin-bottom:8px;font-size:22px}
 .error-box{background:#fee2e2;color:#b91c1c;padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid #fecaca}
 
-/* campo senha com olho - NOVO */
+/* senha com olho */
 .password-field{position:relative;display:flex;align-items:center;width:100%}
-.password-field input{width:100%;padding-right:40px}
-.password-toggle{position:absolute;right:10px;background:none;border:0;cursor:pointer;font-size:18px;color:#666;padding:4px;line-height:1}
-.password-toggle:hover{color:#111}
+.password-field input{width:100%;padding-right:80px}
+.password-toggle{position:absolute;right:8px;background:#f5f5f5;border:0;cursor:pointer;font-size:12px;color:#555;padding:6px 10px;border-radius:6px;font-weight:600}
+.password-toggle:hover{color:#111;background:#eee}
+
+/* criterio de senha forte */
+.password-criteria{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#999;margin-top:-8px}
+.password-criteria span{padding:2px 6px;background:#f5f5f5;border-radius:4px}
+.password-criteria span.ok{color:#15803d;background:#dcfce7;font-weight:600}
+
+/* secundario */
+.secondary{background:#eee;color:#111}
+.secondary:hover{background:#e5e5e5}
+
+/* products */
+.products-page{padding:24px;min-height:100vh}
+.products-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;background:#fff;padding:16px 20px;border-radius:12px}
+.products-form{display:flex;gap:10px;margin-bottom:20px;background:#fff;padding:16px;border-radius:12px;flex-wrap:wrap}
+.products-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.product-item{background:#fff;padding:16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
