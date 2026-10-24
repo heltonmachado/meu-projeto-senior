@@ -25,7 +25,6 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(null, async (error) => {
   const original = error.config;
 
-  // FIX SENIOR: não tenta refresh em rotas de auth
   if (
     original.url?.includes('/auth/login') ||
     original.url?.includes('/auth/register') ||

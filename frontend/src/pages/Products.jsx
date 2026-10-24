@@ -8,9 +8,9 @@ export default function Products() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [sortAsc, setSortAsc] = useState(true);
   const navigate = useNavigate();
-
-  const total = useMemo(() => products.reduce((acc, p) => acc + Number(p.price), 0), [products]);
 
   const handleLogout = useCallback(async () => {
     try { await api.post('/auth/logout'); } catch {}
@@ -28,6 +28,17 @@ export default function Products() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(term));
+  }, [products, search]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => sortAsc ? Number(a.price) - Number(b.price) : Number(b.price) - Number(a.price));
+  }, [filtered, sortAsc]);
+
+  const total = useMemo(() => filtered.reduce((acc, p) => acc + Number(p.price), 0), [filtered]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,7 +80,12 @@ export default function Products() {
 
       <div className="products-total">
         <span>Total: R$ {total.toFixed(2)}</span>
-        <span>{products.length} itens</span>
+        <span>{filtered.length} / {products.length} itens</span>
+      </div>
+
+      <div className="products-filters">
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar produto..." className="search-input" />
+        <button onClick={() => setSortAsc(v => !v)} className="btn-cancel">Preço {sortAsc ? '↑' : '↓'}</button>
       </div>
 
       <form onSubmit={handleSubmit} className="products-form">
@@ -81,7 +97,7 @@ export default function Products() {
       
       {loading ? <p>Carregando...</p> : (
         <ul className="products-list">
-          {products.map(p => (
+          {sorted.map(p => (
             <li key={p.id} className="product-item">
               <span>{p.name} - R$ {Number(p.price).toFixed(2)}</span>
               <div className="product-actions">

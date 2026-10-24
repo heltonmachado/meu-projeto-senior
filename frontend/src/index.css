@@ -23,6 +23,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .forgot-link:hover{color:#111;text-decoration:underline}
 .products-page{padding:24px;min-height:100vh;max-width:900px;margin:0 auto}
 .products-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;background:#fff;padding:16px 20px;border-radius:12px;border:1px solid #eee}
+.products-filters{display:flex;gap:10px;margin-bottom:16px}
+.search-input{flex:1;background:#fff}
 .products-form{display:flex;gap:10px;margin-bottom:20px;background:#fff;padding:16px;border-radius:12px;border:1px solid #eee;flex-wrap:wrap}
 .products-form input{flex:1;min-width:160px;background:#fafafa}
 .products-form input:focus{background:#fff}
