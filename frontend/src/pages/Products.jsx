@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api.js';
-import './Products.css';
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -11,36 +10,33 @@ export default function Products() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try { await api.post('/auth/logout'); } catch {}
     localStorage.removeItem('accessToken');
     navigate('/login', { replace: true });
-  };
+  }, [navigate]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get('/products');
       setProducts(data);
-    } catch (e) {
-      setError('Erro ao carregar produtos');
-    } finally {
-      setLoading(false);
-    }
-  };
+    } catch { setError('Erro ao carregar produtos'); }
+    finally { setLoading(false); }
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.price) return setError('Preencha nome e preço');
-    
+    if (!form.name.trim() || !form.price) return setError('Preencha nome e preço');
     try {
+      const payload = { name: form.name.trim(), price: parseFloat(form.price) };
       if (editingId) {
-        await api.put(`/products/${editingId}`, { name: form.name, price: parseFloat(form.price) });
+        await api.put(`/products/${editingId}`, payload);
         setEditingId(null);
       } else {
-        await api.post('/products', { name: form.name, price: parseFloat(form.price) });
+        await api.post('/products', payload);
       }
       setForm({ name: '', price: '' });
       setError('');
@@ -52,17 +48,13 @@ export default function Products() {
 
   const remove = async (id) => {
     if (!confirm('Excluir este produto?')) return;
-    try {
-      await api.delete(`/products/${id}`);
-      load();
-    } catch {
-      setError('Erro ao excluir');
-    }
+    try { await api.delete(`/products/${id}`); load(); }
+    catch { setError('Erro ao excluir'); }
   };
 
   const startEdit = (p) => {
     setEditingId(p.id);
-    setForm({ name: p.name, price: p.price });
+    setForm({ name: p.name, price: String(p.price) });
   };
 
   return (
@@ -71,16 +63,13 @@ export default function Products() {
         <h2>Produtos {editingId && '(Editando)'}</h2>
         <button onClick={handleLogout}>Sair</button>
       </div>
-      
       {error && <div className="error-box">{error}</div>}
-
       <form onSubmit={handleSubmit} className="products-form">
         <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Nome produto" />
         <input value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="Preço" type="number" step="0.01" />
         <button type="submit" className={editingId ? 'btn-save' : ''}>{editingId ? 'Salvar' : 'Criar'}</button>
         {editingId && <button type="button" onClick={()=> {setEditingId(null); setForm({name:'',price:''})}} className="btn-cancel">Cancelar</button>}
       </form>
-
       {loading ? <p>Carregando...</p> : (
         <ul className="products-list">
           {products.map(p => (
