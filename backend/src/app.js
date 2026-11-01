@@ -4,6 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import pinoHttp from 'pino-http';
+import path from 'path';
 import { logger } from './shared/infra/logger/pino.js';
 import { requestId } from './shared/middlewares/requestId.js';
 import { errorHandler } from './shared/middlewares/errorHandler.js';
@@ -15,7 +16,10 @@ dotenv.config();
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({
   origin: (process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:5173').split(','),
   credentials: true
@@ -25,6 +29,8 @@ app.use(cookieParser());
 app.use(requestId);
 app.use(pinoHttp({ logger }));
 app.use(rateLimit({ windowMs: 15*60*1000, max: 100 }));
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
